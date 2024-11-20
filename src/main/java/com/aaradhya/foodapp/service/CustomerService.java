@@ -7,11 +7,13 @@ import com.aaradhya.foodapp.entity.Customer;
 import com.aaradhya.foodapp.dto.CustomerRequest;
 import com.aaradhya.foodapp.exception.CustomerNotFound;
 import com.aaradhya.foodapp.helper.EncryptionService;
+import com.aaradhya.foodapp.helper.JwtHelper;
 import com.aaradhya.foodapp.mapper.CustomerMapper;
 import com.aaradhya.foodapp.repo.CustomerRepo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.apache.tomcat.Jar;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,6 +30,7 @@ public class CustomerService {
     private final EncryptionService encryptionService;
     private final CustomerRepo customerRepo;
     private final CustomerMapper customerMapper;
+    private final JwtHelper jwtHelper;
     //private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     public String createCustomer(@Valid CustomerRequest request) {
@@ -38,6 +41,7 @@ public class CustomerService {
         return "Created customer";
     }
 
+    //getting all customer by stream api
     public List<CustomerResponse> getAllCustomers() {
         return repo.findAll().stream()
                 .map(customerMapper::toReponse)
@@ -55,14 +59,32 @@ public class CustomerService {
                 ));
     }
 
-    public String loginCustomer(@Valid LoginRequest request) {
+    public String loginCustomer(LoginRequest request) {
         Customer customer = getCustomerByEmail(request.email());
         if(!encryptionService.validates(request.password(), customer.getPassword())) {
             return "Wrong Password or Email";
         }
-        return "Login successful";
+        return jwtHelper.generateToken(request.email());
     }
 
 
+    public String updateCustomer(String auth, CustomerRequest request) {
+        if(!jwtHelper.validateToken(auth, request.email())) {
+            return "Wrong Token";
+        }
+        Customer customer = getCustomerByEmail(request.email());
+        customer.setName(request.name());
+        customer.setPassword(encryptionService.encode(request.password()));
+        repo.save(customer);
+        return "Updated customer";
+    }
 
+    public String deleteCustomer(String auth, Long id){
+        CustomerResponse customer = getCustomerByID(id);
+        if(!jwtHelper.validateToken(auth, customer.email())){
+            return "Wrong Token";
+        }
+        repo.deleteById(id);
+        return "Deleted customer";
+    }
 }

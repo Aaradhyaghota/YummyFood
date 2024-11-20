@@ -46,4 +46,17 @@ public class homeController {
     public ResponseEntity<CustomerResponse> getCustomerByID(@PathVariable Long id) {
         return ResponseEntity.ok(customerService.getCustomerByID(id));
     }
+
+    //update customer detail
+    @PutMapping("/customer/update")
+    public ResponseEntity<String> updateCustomerByID(@RequestHeader ("Authorization") String auth, @RequestBody @Valid CustomerRequest request) {
+        String token = auth.replace("Bearer ", "").trim();
+        return ResponseEntity.ok(customerService.updateCustomer(token, request));
+    }
+
+    @DeleteMapping("/customer/delete")
+    public ResponseEntity<String> deleteCustomerByID(@RequestHeader ("Authorization") String auth, @RequestParam ("ID") Long id) {
+        String token = auth.replace("Bearer ", "").trim();
+        return ResponseEntity.ok(customerService.deleteCustomer(token, id));
+    }
 }
