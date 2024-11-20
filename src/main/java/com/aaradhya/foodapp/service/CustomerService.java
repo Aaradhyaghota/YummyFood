@@ -1,6 +1,7 @@
 package com.aaradhya.foodapp.service;
 
 
+import com.aaradhya.foodapp.dto.CustomerResponse;
 import com.aaradhya.foodapp.dto.LoginRequest;
 import com.aaradhya.foodapp.entity.Customer;
 import com.aaradhya.foodapp.dto.CustomerRequest;
@@ -13,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static java.lang.String.format;
 
 @Service
@@ -23,6 +27,7 @@ public class CustomerService {
     private final CustomerMapper mapper;
     private final EncryptionService encryptionService;
     private final CustomerRepo customerRepo;
+    private final CustomerMapper customerMapper;
     //private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     public String createCustomer(@Valid CustomerRequest request) {
@@ -33,7 +38,17 @@ public class CustomerService {
         return "Created customer";
     }
 
-    public Customer getCustomer(String email) {
+    public List<CustomerResponse> getAllCustomers() {
+        return repo.findAll().stream()
+                .map(customerMapper::toReponse)
+                .collect(Collectors.toList());
+    }
+
+    public CustomerResponse getCustomerByID(long id) {
+        return customerMapper.toReponse(customerRepo.findById(id).get());
+    }
+
+    public Customer getCustomerByEmail(String email) {
         return customerRepo.findByEmail(email)
                 .orElseThrow(() -> new CustomerNotFound(
                         format("Cannot update Customer:: No customer found with the provided ID:: %s", email)
@@ -41,10 +56,13 @@ public class CustomerService {
     }
 
     public String loginCustomer(@Valid LoginRequest request) {
-        Customer customer = getCustomer(request.email());
+        Customer customer = getCustomerByEmail(request.email());
         if(!encryptionService.validates(request.password(), customer.getPassword())) {
             return "Wrong Password or Email";
         }
         return "Login successful";
     }
+
+
+
 }
