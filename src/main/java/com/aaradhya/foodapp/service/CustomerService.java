@@ -29,7 +29,6 @@ public class CustomerService {
     private final CustomerRepo repo;
     private final CustomerMapper mapper;
     private final EncryptionService encryptionService;
-    private final CustomerRepo customerRepo;
     private final CustomerMapper customerMapper;
     private final JwtHelper jwtHelper;
     //private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
@@ -50,11 +49,11 @@ public class CustomerService {
     }
 
     public CustomerResponse getCustomerByID(long id) {
-        return customerMapper.toReponse(customerRepo.findById(id).get());
+        return customerMapper.toReponse(repo.findById(id).get());
     }
 
     public Customer getCustomerByEmail(String email) {
-        return customerRepo.findByEmail(email)
+        return repo.findByEmail(email)
                 .orElseThrow(() -> new CustomerNotFound(
                         format("Cannot update Customer:: No customer found with the provided ID:: %s", email)
                 ));

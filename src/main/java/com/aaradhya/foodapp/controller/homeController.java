@@ -17,12 +17,12 @@ public class homeController {
     private final CustomerService customerService;
 
     @RequestMapping("/")
-    public String greed() {
+    public String greet() {
         return "Hello World!";
     }
 
 
-    @PostMapping("/add")
+    @PostMapping("/customer/add")
     //@Valid will check that data sended is in format and constrainst wise correct
     //@RequestBody will recieve the data and not expect a page
     public ResponseEntity<String> createCustomer (@RequestBody @Valid CustomerRequest request) {
