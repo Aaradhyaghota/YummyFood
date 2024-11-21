@@ -5,6 +5,7 @@ import com.aaradhya.foodapp.dto.CustomerResponse;
 import com.aaradhya.foodapp.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,14 +50,14 @@ public class homeController {
 
     //update customer detail
     @PutMapping("/customer/update")
-    public ResponseEntity<String> updateCustomerByID(@RequestHeader ("Authorization") String auth, @RequestBody @Valid CustomerRequest request) {
-        String token = auth.replace("Bearer ", "").trim();
-        return ResponseEntity.ok(customerService.updateCustomer(token, request));
+    public ResponseEntity<String> updateCustomer(@RequestHeader ("Authorization") String auth, @RequestBody @Valid CustomerRequest request) throws BadRequestException {
+        String email = customerService.validateAndExtractUsername(auth);
+        return ResponseEntity.ok(customerService.updateCustomer(email, request));
     }
 
     @DeleteMapping("/customer/delete")
-    public ResponseEntity<String> deleteCustomerByID(@RequestHeader ("Authorization") String auth, @RequestParam ("ID") Long id) {
-        String token = auth.replace("Bearer ", "").trim();
-        return ResponseEntity.ok(customerService.deleteCustomer(token, id));
+    public ResponseEntity<String> deleteCustomer(@RequestHeader ("Authorization") String auth) throws BadRequestException {
+        String email = customerService.validateAndExtractUsername(auth);
+        return ResponseEntity.ok(customerService.deleteCustomer(email));
     }
 }

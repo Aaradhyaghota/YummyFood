@@ -13,6 +13,7 @@ import com.aaradhya.foodapp.repo.CustomerRepo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.apache.coyote.BadRequestException;
 import org.apache.tomcat.Jar;
 import org.springframework.stereotype.Service;
 
@@ -67,24 +68,32 @@ public class CustomerService {
         return jwtHelper.generateToken(request.email());
     }
 
-
-    public String updateCustomer(String auth, CustomerRequest request) {
-        if(!jwtHelper.validateToken(auth, request.email())) {
-            return "Wrong Token";
+    public String validateAndExtractUsername(String auth) throws BadRequestException {
+        if(auth == null || !auth.startsWith("Bearer ")){
+            throw new BadRequestException("Invalid Authorization header");
         }
-        Customer customer = getCustomerByEmail(request.email());
-        customer.setName(request.name());
-        customer.setPassword(encryptionService.encode(request.password()));
-        repo.save(customer);
-        return "Updated customer";
+        String token = auth.replace("Bearer ", "").trim();
+
+        if (!jwtHelper.validateToken(token)) {
+            throw new BadRequestException("Invalid JWT token");
+        }
+
+        return jwtHelper.extractUsername(token);
     }
 
-    public String deleteCustomer(String auth, Long id){
-        CustomerResponse customer = getCustomerByID(id);
-        if(!jwtHelper.validateToken(auth, customer.email())){
-            return "Wrong Token";
-        }
-        repo.deleteById(id);
-        return "Deleted customer";
+    public String updateCustomer(String email, CustomerRequest request) {
+        Customer customer = getCustomerByEmail(email);
+
+        customer.setName(request.name());
+        customer.setEmail(request.email());
+        customer.setPassword(encryptionService.encode(request.password()));
+        repo.save(customer);
+        return "Customer details Updated";
+    }
+
+    public String deleteCustomer(String email){
+        Customer customer = getCustomerByEmail(email);
+        repo.delete(customer);
+        return "Deleted "+ email +"customer";
     }
 }
